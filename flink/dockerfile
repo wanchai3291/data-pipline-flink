@@ -1,0 +1,29 @@
+# Use the official Flink image as the base
+FROM apache/flink:1.16.0
+
+# Set environment variables (optional)
+ENV FLINK_VERSION=1.15.0
+ENV FLINK_HOME=/opt/flink
+
+# Set working directory
+WORKDIR /opt/flink
+
+# Optionally add your custom Flink job JARs or configuration files
+# ADD your-flink-job.jar $FLINK_HOME/lib/
+# ADD flink-conf.yaml $FLINK_HOME/conf/
+
+# Expose the Flink Web UI port (default 8081)
+EXPOSE 8081
+
+# Expose the Flink JobManager RPC port (default 6123)
+EXPOSE 6123
+
+# Expose the Flink TaskManager RPC port (default 6122)
+EXPOSE 6122
+
+# Expose the Flink data port (default 6124)
+EXPOSE 6124
+
+# Command to start the Flink JobManager (or TaskManager, depending on what you need)
+# Default mode: standalone cluster
+CMD ["jobmanager"]
