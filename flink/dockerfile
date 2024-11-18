@@ -1,29 +1,21 @@
-# Use the official Flink image as the base
-FROM apache/flink:1.16.0
+FROM alpine:3.17.0 AS builder
 
-# Set environment variables (optional)
-ENV FLINK_VERSION=1.15.0
-ENV FLINK_HOME=/opt/flink
+FROM apache/flink:1.16.2-scala_2.12-java8 AS runtime
 
-# Set working directory
-WORKDIR /opt/flink
+# Install Python 3.8 & git & PyFlink
+RUN apt-get update && apt-get install -y software-properties-common &&  \
+    add-apt-repository -y ppa:deadsnakes/ppa &&  \
+    apt-get remove -y software-properties-common && apt-get autoremove -y && apt-get clean
+RUN apt-get update && apt-get install -y python3.8 python3-pip python3.8-distutils git && apt-get clean
 
-# Optionally add your custom Flink job JARs or configuration files
-# ADD your-flink-job.jar $FLINK_HOME/lib/
-# ADD flink-conf.yaml $FLINK_HOME/conf/
+RUN python3.8 -m pip install --upgrade pip && \
+    python3.8 -m pip install apache-flink==1.16.2 --no-cache-dir
 
-# Expose the Flink Web UI port (default 8081)
-EXPOSE 8081
+RUN ln -sf /usr/bin/python3.8 /usr/bin/python3
 
-# Expose the Flink JobManager RPC port (default 6123)
-EXPOSE 6123
+# คัดลอกไฟล์ job.py เข้า Container
+COPY job.py /opt/flink/job.py
+# COPY check_libs.py /opt/flink/check_libs.py
 
-# Expose the Flink TaskManager RPC port (default 6122)
-EXPOSE 6122
-
-# Expose the Flink data port (default 6124)
-EXPOSE 6124
-
-# Command to start the Flink JobManager (or TaskManager, depending on what you need)
-# Default mode: standalone cluster
-CMD ["jobmanager"]
+ENTRYPOINT ["python3", "/opt/flink/job.py"]
+# ENTRYPOINT ["python3", "/opt/flink/check_libs.py"]
